@@ -21,6 +21,7 @@
  *         frog_filter_files(&src, "./src", ".*.c");
  *         frog_cmd_foreach(src, "gcc", "-c", NULL);
  *         frog_cmd_wait("gcc", "main.o", "-o", "executable", NULL);
+ *         frog_delete_filter(&src);
  *         return 0;
  * }
  * [shell]
@@ -85,10 +86,17 @@ int frog_cmd_asyncv(const char *command, va_list fargs);
  * and returns the PID of the spawned process. */
 int frog_cmd_asyncl(const char *command, char *args[]);
 
-// #define FROG_IMPLEMENTATION
+#define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
 
-#define frog_path_join(path, file) ({ char* s = malloc(strlen(path) + strlen(file) +2); strcpy(s, path); strcat(s, "/"); strcat(s, file); s; })
+#define frog_path_join(path, file)                                 \
+        ({                                                         \
+                char *s = malloc(strlen(path) + strlen(file) + 2); \
+                strcpy(s, path);                                   \
+                strcat(s, "/");                                    \
+                strcat(s, file);                                   \
+                s;                                                 \
+        })
 
 /* Todo: Recompile files only it they where modidied */
 
@@ -149,7 +157,6 @@ frog_cmd_async(const char *command, ...)
         return frog_cmd_asyncv(command, fargs);
 }
 
-
 /* Execute command with variadict arguments (null terminated)
  * wait for command termination and return the exit code */
 int
@@ -176,26 +183,25 @@ frog_is_newer(const char *file1, const char *file2)
                    (f1s.st_mtim.tv_nsec - f2s.st_mtim.tv_nsec) * 1e-9;
 }
 
-#define frog_rebuild_itself(argc, argv)                                         \
-        do {                                                                    \
-                if (frog_is_newer(__FILE__, argv[0])) {                         \
-                        char new_name[32];                                      \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]); \
-                        rename(argv[0], new_name);                              \
-                        LOG("Rebuilding " __FILE__ "\n");                       \
-                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], NULL);    \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);       \
-                        exit(0);                                                \
-                }                                                               \
+#define frog_rebuild_itself(argc, argv)                                                                 \
+        do {                                                                                            \
+                if (frog_is_newer(__FILE__, argv[0])) {                                                 \
+                        char new_name[32];                                                              \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);                         \
+                        rename(argv[0], new_name);                                                      \
+                        LOG("Rebuilding " __FILE__ "\n");                                               \
+                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=c11", NULL); \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                               \
+                        exit(0);                                                                        \
+                }                                                                                       \
         } while (0)
 
 void
 frog_cmd_foreach(frog_da_str files, const char *command, ...)
 {
         int *pids = malloc(sizeof(int) * files.size);
-        int i;
-
         frog_da_str cmdargs = { 0 };
+        int i;
         char *sarg;
         va_list fargs;
 
@@ -221,6 +227,19 @@ frog_cmd_foreach(frog_da_str files, const char *command, ...)
         for (i = 0; i < files.size; i++) {
                 waitpid(pids[i], NULL, 0);
         }
+
+        free(pids);
+        da_destroy(&cmdargs);
+}
+
+void
+frog_delete_filter(frog_da_str *da)
+{
+        for_da_each(elem, *da)
+        {
+                free(*elem);
+        }
+        da_destroy(da);
 }
 
 int
@@ -268,6 +287,7 @@ frog_filter_files(frog_da_str *out, const char *path, const char *pattern)
                 }
         }
 
+        da_destroy(&files);
         regfree(&regex);
         return 0;
 }

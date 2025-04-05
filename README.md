@@ -1,7 +1,7 @@
 # 🐸 FROG — Fast Recompilation and Object Generation
 
 - **Author:** Hugo Coto Florez
-- **Repository:** [github.com/hugocotoflorez/frog](https://github.com/hugocotoflorez/frog)
+- **Standard:** C11
 - **License:** Licenseless
 - **Inspired by:** [`nob.h`](https://github.com/tsoding/nob.h) by [@tsoding](https://github.com/tsoding)
 
