@@ -68,6 +68,13 @@ typedef DA(char *) frog_da_str;
                 s;                                                 \
         })
 
+#define frog_cmd_filtered_foreach(path, filter, ...)              \
+        do {                                                      \
+                frog_da_str __filter = { 0 };                     \
+                frog_filter_files(&__filter, "./vshcfp", ".*.c"); \
+                frog_cmd_foreach(__filter, ##__VA_ARGS__, NULL);  \
+                frog_delete_filter(&__filter);                    \
+        } while (0)
 
 void
 frog_makedir(const char *dir)
