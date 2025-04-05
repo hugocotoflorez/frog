@@ -33,8 +33,8 @@
  * It recompiles itself if source is newer than executable.
  */
 
-#include "da.h"
 #include <dirent.h>
+#include <errno.h>
 #include <regex.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -42,6 +42,8 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+
+#include "da.h"
 
 #define OLD_NAME "%s.old"
 #define LOG_PRINT 0
@@ -54,39 +56,7 @@
 
 typedef DA(char *) frog_da_str;
 
-/* Filters the files in a directory that match a given pattern
- * and stores them in a dynamic list. */
-int frog_filter_files(frog_da_str *out, const char *path, const char *pattern);
-
-/* Executes a command on a list of files, spawning one process per file
- * and waiting for all to complete. */
-void frog_cmd_foreach(frog_da_str files, const char *command, ...);
-
-/* Rebuilds the current executable if the source file is newer
- * than the executable itself. */
-int frog_rebuild_itself(int argc, char *argv[]);
-
-/* Returns whether one file is newer than another based on
- * their modification timestamps. */
-int frog_is_newer(const char *file1, const char *file2);
-
-/* Executes a command and waits for its completion, returning
- * the exit status. */
-int frog_cmd_wait(const char *command, ...);
-
-/* Executes a command asynchronously and returns the PID of the
- * spawned process. */
-int frog_cmd_async(const char *command, ...);
-
-/* Variant of frog_cmd_async that takes a va_list instead of
- * variadic arguments. */
-int frog_cmd_asyncv(const char *command, va_list fargs);
-
-/* Executes a command asynchronously using an array of arguments
- * and returns the PID of the spawned process. */
-int frog_cmd_asyncl(const char *command, char *args[]);
-
-#define FROG_IMPLEMENTATION
+// #define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
 
 #define frog_path_join(path, file)                                 \
@@ -98,11 +68,24 @@ int frog_cmd_asyncl(const char *command, char *args[]);
                 s;                                                 \
         })
 
-/* Todo: Recompile files only it they where modidied */
+
+void
+frog_makedir(const char *dir)
+{
+        errno = 0;
+        if (mkdir(dir, 0700) != 0) {
+                if (errno != EEXIST) {
+                        perror(dir);
+                        exit(1);
+                }
+        }
+}
+
 
 int
 frog_cmd_asyncl(const char *command, char *args[])
 {
+        /* Todo: Recompile files only it they where modidied */
         int pid;
         char **arg;
         printf("[CMD] ");
@@ -157,6 +140,8 @@ frog_cmd_async(const char *command, ...)
         return frog_cmd_asyncv(command, fargs);
 }
 
+#define frog_shell_cmd(cmd) frog_cmd_wait("sh", "-c", cmd, NULL);
+
 /* Execute command with variadict arguments (null terminated)
  * wait for command termination and return the exit code */
 int
@@ -183,17 +168,17 @@ frog_is_newer(const char *file1, const char *file2)
                    (f1s.st_mtim.tv_nsec - f2s.st_mtim.tv_nsec) * 1e-9;
 }
 
-#define frog_rebuild_itself(argc, argv)                                                                 \
-        do {                                                                                            \
-                if (frog_is_newer(__FILE__, argv[0])) {                                                 \
-                        char new_name[32];                                                              \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);                         \
-                        rename(argv[0], new_name);                                                      \
-                        LOG("Rebuilding " __FILE__ "\n");                                               \
+#define frog_rebuild_itself(argc, argv)                                                  \
+        do {                                                                             \
+                if (frog_is_newer(__FILE__, argv[0])) {                                  \
+                        char new_name[32];                                               \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);          \
+                        rename(argv[0], new_name);                                       \
+                        LOG("Rebuilding " __FILE__ "\n");                                \
                         frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=c11", NULL); \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                               \
-                        exit(0);                                                                        \
-                }                                                                                       \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                \
+                        exit(0);                                                         \
+                }                                                                        \
         } while (0)
 
 void
