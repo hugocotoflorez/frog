@@ -21,7 +21,10 @@
  * It recompiles itself if source is newer than executable.
  */
 
+
+#define _DEFAULT_SOURCE
 #include <dirent.h>
+
 #include <errno.h>
 #include <regex.h>
 #include <stdarg.h>
@@ -30,6 +33,7 @@
 #include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "da.h"
 
@@ -60,7 +64,7 @@ typedef DA(char *) frog_da_str;
 #define frog_cmd_filtered_foreach(path, filter, ...)              \
         do {                                                      \
                 frog_da_str __filter = { 0 };                     \
-                frog_filter_files(&__filter, "./vshcfp", ".*.c"); \
+                frog_filter_files(&__filter, path, filter); \
                 frog_cmd_foreach(__filter, ##__VA_ARGS__, NULL);  \
                 frog_delete_filter(&__filter);                    \
         } while (0)
@@ -159,8 +163,7 @@ frog_is_newer(const char *file1, const char *file2)
         struct stat f2s;
         stat(file1, &f1s);
         stat(file2, &f2s);
-        return 0 < f1s.st_mtim.tv_sec - f2s.st_mtim.tv_sec +
-                   (f1s.st_mtim.tv_nsec - f2s.st_mtim.tv_nsec) * 1e-9;
+        return f1s.st_atime > f2s.st_atime;
 }
 
 #define frog_rebuild_itself(argc, argv)                                                  \
