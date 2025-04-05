@@ -45,11 +45,16 @@ int
 main(int argc, char *argv[])
 {
         frog_da_str src = { 0 };
-        frog_rebuild_itself(argc, argv);                            // rebuild itself if modified
-        frog_filter_files(&src, "./src", ".*.c");                   // get all *.c from ./src
-        frog_cmd_foreach(src, "gcc", "-c", NULL);                   // compile the .c into .o
-        frog_cmd_wait("gcc", "main.o", "-o", "executable", NULL);   // link the objects
-        frog_delete_filter(&src);                                   // delete filter
+        frog_rebuild_itself(argc, argv);
+
+        frog_filter_files(&src, "./src", ".*.c");
+        frog_cmd_foreach(src, "gcc", "-c", NULL);
+        frog_delete_filter(&src);
+
+        frog_makedir("objs");
+        frog_shell_cmd("mv *.o objs");
+        frog_shell_cmd("gcc objs/*.o -o executable");
+
         return 0;
 }
 ```
@@ -66,65 +71,7 @@ FROG will recompile itself if its source has changed since the last build.
 
 
 ## API Reference
-
-```c
-int frog_filter_files(frog_da_str *out, const char *path, const char *pattern);
-```
-
-Filters files in a directory `path` matching `pattern` (POSIX regex), storing the full paths in the dynamic array `out`.
-
-
-
-```c
-void frog_cmd_foreach(frog_da_str files, const char *command, ...);
-```
-
-Executes the given `command` on each file in `files`, forking one process per call. Waits for all processes to complete.
-
-
-
-```c
-int frog_cmd_wait(const char *command, ...);
-```
-
-Executes a command synchronously and waits for its termination. Returns the exit status.
-
-
-
-```c
-int frog_cmd_async(const char *command, ...);
-```
-
-Executes a command asynchronously and returns its PID. Does not wait for termination.
-
-
-
-```c
-int frog_cmd_asyncv(const char *command, va_list fargs);
-```
-```c
-int frog_cmd_asyncl(const char *command, char *args[]);
-```
-
-Lower-level interfaces for asynchronous command execution using `va_list` or a `char*` argument list.
-
-
-
-```c
-int frog_is_newer(const char *file1, const char *file2);
-```
-
-Returns true if `file1` is newer than `file2`, based on file modification timestamps.
-
-
-
-```c
-frog_rebuild_itself(argc, argv);
-```
-
-Macro that checks if the source file is newer than the current executable. If so, it recompiles and relaunches the program.
-
-
+As Im not going to have this section updated, I prefer to have this empty. Read the source
 
 ## Example Output
 
