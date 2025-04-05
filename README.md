@@ -66,44 +66,60 @@ FROG will recompile itself if its source has changed since the last build.
 
 ## API Reference
 
-### `int frog_filter_files(frog_da_str *out, const char *path, const char *pattern);`
+```c
+int frog_filter_files(frog_da_str *out, const char *path, const char *pattern);
+```
 
 Filters files in a directory `path` matching `pattern` (POSIX regex), storing the full paths in the dynamic array `out`.
 
 
 
-### `void frog_cmd_foreach(frog_da_str files, const char *command, ...);`
+```c
+void frog_cmd_foreach(frog_da_str files, const char *command, ...);
+```
 
 Executes the given `command` on each file in `files`, forking one process per call. Waits for all processes to complete.
 
 
 
-### `int frog_cmd_wait(const char *command, ...);`
+```c
+int frog_cmd_wait(const char *command, ...);
+```
 
 Executes a command synchronously and waits for its termination. Returns the exit status.
 
 
 
-### `int frog_cmd_async(const char *command, ...);`
+```c
+int frog_cmd_async(const char *command, ...);
+```
 
 Executes a command asynchronously and returns its PID. Does not wait for termination.
 
 
 
-### `int frog_cmd_asyncv(const char *command, va_list fargs);`
-### `int frog_cmd_asyncl(const char *command, char *args[]);`
+```c
+int frog_cmd_asyncv(const char *command, va_list fargs);
+```
+```c
+int frog_cmd_asyncl(const char *command, char *args[]);
+```
 
 Lower-level interfaces for asynchronous command execution using `va_list` or a `char*` argument list.
 
 
 
-### `int frog_is_newer(const char *file1, const char *file2);`
+```c
+int frog_is_newer(const char *file1, const char *file2);
+```
 
 Returns true if `file1` is newer than `file2`, based on file modification timestamps.
 
 
 
-### `frog_rebuild_itself(argc, argv);`
+```c
+frog_rebuild_itself(argc, argv);
+```
 
 Macro that checks if the source file is newer than the current executable. If so, it recompiles and relaunches the program.
 
