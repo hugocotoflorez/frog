@@ -13,7 +13,7 @@ main(int argc, char *argv[])
 
         frog_makedir("objs");
         frog_shell_cmd("mv *.o objs");
-        frog_cmd_wait("sh", "-c", "gcc objs/*.o -o executable", NULL);
+        frog_shell_cmd("gcc objs/*.o -o executable");
 
         return 0;
 }
