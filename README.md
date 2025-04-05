@@ -41,15 +41,16 @@ Here’s a minimal example of how to use FROG to compile all `.c` files in a `sr
 #define FROG_IMPLEMENTATION
 #include "frog.h"
 
-int main(int argc, char *argv[]) {
-    frog_da_str src = {0};
-
-    frog_rebuild_itself(argc, argv);                          // Optional: Self-rebuild if needed
-    frog_filter_files(&src, "./src", ".*\\.c");               // Filter C source files
-    frog_cmd_foreach(src, "gcc", "-c", NULL);                 // Compile each file with gcc -c
-    frog_cmd_wait("gcc", "main.o", "-o", "program", NULL);    // Link main.o into executable
-
-    return 0;
+int
+main(int argc, char *argv[])
+{
+        frog_da_str src = { 0 };
+        frog_rebuild_itself(argc, argv);                            // rebuild itself if modified
+        frog_filter_files(&src, "./src", ".*.c");                   // get all *.c from ./src
+        frog_cmd_foreach(src, "gcc", "-c", NULL);                   // compile the .c into .o
+        frog_cmd_wait("gcc", "main.o", "-o", "executable", NULL);   // link the objects
+        frog_delete_filter(&src);                                   // delete filter
+        return 0;
 }
 ```
 
