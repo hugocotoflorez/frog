@@ -23,8 +23,10 @@
 
 #define STD "c99"
 
-
+#ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
+#endif
+
 #include <dirent.h>
 
 #include <errno.h>
@@ -53,27 +55,27 @@
         } while (0)
 #endif
 
-#define UNREACHABLE(...)                                                     \
-        do {                                                                 \
-                LOG(__FILE__ ":%d: ", __LINE__);                             \
-                LOG("[Unreachable]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
-                exit(1);                                                     \
+#define UNREACHABLE(...)                                                                 \
+        do {                                                                             \
+                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                             \
+                fprintf(stderr, "[Unreachable]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                exit(1);                                                                 \
         } while (0)
 
-#define NOIMPLEMENTED(...)                                                          \
-        do {                                                                        \
-                LOG(__FILE__ ":%d: ", __LINE__);                                    \
-                LOG("[No yet implemented]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
-                exit(1);                                                            \
+#define NOIMPLEMENTED(...)                                                                      \
+        do {                                                                                    \
+                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                                    \
+                fprintf(stderr, "[No yet implemented]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                exit(1);                                                                        \
         } while (0)
 
-#define OBSOLETE(...)                                                     \
-        do {                                                              \
-                LOG(__FILE__ ":%d: ", __LINE__);                          \
-                LOG("[Obsolete]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+#define OBSOLETE(...)                                                                 \
+        do {                                                                          \
+                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                          \
+                fprintf(stderr, "[Obsolete]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
         } while (0)
 
-#define TODO(what)
+#define TODO(...)
 
 #define ZERO(obj_ptr) memset((obj_ptr), 0, sizeof(obj_ptr)[0])
 
@@ -320,22 +322,22 @@ frog_is_newer(const char *file1, const char *file2)
 {
         struct stat f1s;
         struct stat f2s;
-        stat(file1, &f1s);
-        stat(file2, &f2s);
+        assert(0 == stat(file1, &f1s));
+        assert(0 == stat(file2, &f2s));
         return f1s.st_atime > f2s.st_atime;
 }
 
-#define frog_rebuild_itself(argc, argv)                                                    \
-        do {                                                                               \
-                if (frog_is_newer(__FILE__, argv[0])) {                                    \
-                        char new_name[32];                                                 \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);            \
-                        rename(argv[0], new_name);                                         \
-                        LOG("Rebuilding " __FILE__ "\n");                                  \
+#define frog_rebuild_itself(argc, argv)                                                   \
+        do {                                                                              \
+                if (frog_is_newer(__FILE__, argv[0])) {                                   \
+                        char new_name[32];                                                \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);           \
+                        rename(argv[0], new_name);                                        \
+                        LOG("Rebuilding " __FILE__ "\n");                                 \
                         frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=" STD, NULL); \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                  \
-                        exit(0);                                                           \
-                }                                                                          \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                 \
+                        exit(0);                                                          \
+                }                                                                         \
         } while (0)
 
 void
