@@ -10,20 +10,8 @@
 
 /* ----------| Quickstart |----------
  * [frog.c]
- * #define FROG_IMPLEMENTATION
- * #include "frog.h"
+ * See frog.c
  *
- * int
- * main(int argc, char *argv[])
- * {
- *         frog_da_str src = { 0 };
- *         frog_rebuild_itself(argc, argv);
- *         frog_filter_files(&src, "./src", ".*.c");
- *         frog_cmd_foreach(src, "gcc", "-c", NULL);
- *         frog_cmd_wait("gcc", "main.o", "-o", "executable", NULL);
- *         frog_delete_filter(&src);
- *         return 0;
- * }
  * [shell]
  * $ gcc frog.c -o frog
  * $ ./frog
@@ -59,6 +47,7 @@ typedef DA(char *) frog_da_str;
 // #define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
 
+/* The result have to be freed */
 #define frog_path_join(path, file)                                 \
         ({                                                         \
                 char *s = malloc(strlen(path) + strlen(file) + 2); \
@@ -87,7 +76,6 @@ frog_makedir(const char *dir)
                 }
         }
 }
-
 
 int
 frog_cmd_asyncl(const char *command, char *args[])
