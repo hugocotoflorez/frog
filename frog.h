@@ -21,6 +21,8 @@
  * It recompiles itself if source is newer than executable.
  */
 
+#define STD "c99"
+
 
 #define _DEFAULT_SOURCE
 #include <dirent.h>
@@ -45,7 +47,10 @@
 #if defined(LOG_PRINT) && LOG_PRINT
 #define LOG(format, ...) fprintf(stderr, "[LOG] " format, ##__VA_ARGS__)
 #else
-#define LOG(...)
+/* Using empty do-while to avoid else witout body warning */
+#define LOG(...) \
+        do {     \
+        } while (0)
 #endif
 
 #define UNREACHABLE(...)                                                     \
@@ -320,17 +325,17 @@ frog_is_newer(const char *file1, const char *file2)
         return f1s.st_atime > f2s.st_atime;
 }
 
-#define frog_rebuild_itself(argc, argv)                                                  \
-        do {                                                                             \
-                if (frog_is_newer(__FILE__, argv[0])) {                                  \
-                        char new_name[32];                                               \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);          \
-                        rename(argv[0], new_name);                                       \
-                        LOG("Rebuilding " __FILE__ "\n");                                \
-                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=c11", NULL); \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                \
-                        exit(0);                                                         \
-                }                                                                        \
+#define frog_rebuild_itself(argc, argv)                                                    \
+        do {                                                                               \
+                if (frog_is_newer(__FILE__, argv[0])) {                                    \
+                        char new_name[32];                                                 \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);            \
+                        rename(argv[0], new_name);                                         \
+                        LOG("Rebuilding " __FILE__ "\n");                                  \
+                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=" STD, NULL); \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                  \
+                        exit(0);                                                           \
+                }                                                                          \
         } while (0)
 
 void
