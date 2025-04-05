@@ -32,13 +32,15 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <unistd.h>
 #include <time.h>
-
-#include "da.h"
+#include <unistd.h>
 
 #define OLD_NAME "%s.old"
 #define LOG_PRINT 0
+
+/*
+ * ----------| LOG & Related |----------
+ */
 
 #if defined(LOG_PRINT) && LOG_PRINT
 #define LOG(format, ...) fprintf(stderr, "[LOG] " format, ##__VA_ARGS__)
@@ -46,10 +48,162 @@
 #define LOG(...)
 #endif
 
-typedef DA(char *) frog_da_str;
+#define UNREACHABLE(...)                                                     \
+        do {                                                                 \
+                LOG(__FILE__ ":%d: ", __LINE__);                             \
+                LOG("[Unreachable]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                exit(1);                                                     \
+        } while (0)
+
+#define NOIMPLEMENTED(...)                                                          \
+        do {                                                                        \
+                LOG(__FILE__ ":%d: ", __LINE__);                                    \
+                LOG("[No yet implemented]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                exit(1);                                                            \
+        } while (0)
+
+#define OBSOLETE(...)                                                     \
+        do {                                                              \
+                LOG(__FILE__ ":%d: ", __LINE__);                          \
+                LOG("[Obsolete]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+        } while (0)
+
+#define TODO(what)
+
+#define ZERO(obj_ptr) memset((obj_ptr), 0, sizeof(obj_ptr)[0])
+
+/*
+ * ----------| String mod macros |----------
+ */
+
+#define strcatf(strbuf, what, ...) sprintf((strbuf) + strlen(strbuf), what, ##__VA_ARGS__)
+
+#define truncat(str, chr)                         \
+        do {                                      \
+                char *_c_;                        \
+                if ((_c_ = strchr((str), (chr)))) \
+                        *_c_ = 0;                 \
+        } while (0)
+
+
+/* Generic Dynamic Array Implementation
+ *
+ * Author: Hugo Coto Florez
+ * Github: github.com/hugocotoflorez
+ *
+ * I know it is not readable at all but it works fine. ~ Hugo C.F. (me)
+ *
+ * Licenceless, fully opensource
+ */
+
+#ifndef DYNAMIC_ARRAY_H
+#define DYNAMIC_ARRAY_H
+
+#include <stdlib.h> // alloc
+
+/* Gnu dependent */
+#ifdef DA_CPP_COMPATIBLE
+#define DA_REALLOC(dest, size) (typeof(dest)) realloc((dest), (size))
+#else
+#define DA_REALLOC(dest, size) realloc((dest), (size));
+#endif
+
+#ifdef DA_CPP_COMPATIBLE
+#define AUTO_TYPE auto
+#else
+#define AUTO_TYPE __auto_type
+#endif
+
+#define DA(type)              \
+        struct {              \
+                int capacity; \
+                int size;     \
+                type *data;   \
+        }
+
+#include <assert.h>
+/* Initialize DA_PTR (that is a pointer to a DA). Initial size (int) can be
+ * passed as second argument, default is 4. */
+#define da_init(da_ptr, ...)                                                               \
+        ({                                                                                 \
+                OBSOLETE("da_init -> zero initialize it\n");                               \
+                (da_ptr)->capacity = 256;                                                  \
+                __VA_OPT__((da_ptr)->capacity = (__VA_ARGS__));                            \
+                (da_ptr)->size = 0;                                                        \
+                (da_ptr)->data = NULL;                                                     \
+                (da_ptr)->data =                                                           \
+                DA_REALLOC((da_ptr)->data, sizeof *((da_ptr)->data) * (da_ptr)->capacity); \
+                assert(da_ptr);                                                            \
+                da_ptr;                                                                    \
+        })
+
+#include <assert.h>
+// add E to DA_PTR that is a pointer to a DA of the same type as E
+#define da_append(da_ptr, e)                                                        \
+        ({                                                                          \
+                if ((da_ptr)->size >= (da_ptr)->capacity) {                         \
+                        (da_ptr)->capacity += 3;                                    \
+                        (da_ptr)->data =                                            \
+                        DA_REALLOC((da_ptr)->data,                                  \
+                                   sizeof(*((da_ptr)->data)) * (da_ptr)->capacity); \
+                        assert(da_ptr);                                             \
+                }                                                                   \
+                assert((da_ptr)->size < (da_ptr)->capacity);                        \
+                (da_ptr)->data[(da_ptr)->size++] = (e);                             \
+                (da_ptr)->size - 1;                                                 \
+        })
+
+/* Destroy DA pointed by DA_PTR. DA can be initialized again but previous values
+ * are not accessible anymore. */
+#define da_destroy(da_ptr)              \
+        ({                              \
+                (da_ptr)->capacity = 0; \
+                (da_ptr)->size = 0;     \
+                free((da_ptr)->data);   \
+                (da_ptr)->data = NULL;  \
+        })
+
+/* Insert element E into DA pointed by DA_PTR at index I. */
+#include <string.h> // memmove
+#define da_insert(da_ptr, e, i)                                                 \
+        ({                                                                      \
+                assert((i) >= 0 && (i) <= (da_ptr)->size);                      \
+                da_append(da_ptr, e);                                           \
+                memmove((da_ptr)->data + (i) + 1, (da_ptr)->data + (i),         \
+                        ((da_ptr)->size - (i) - 1) * sizeof *((da_ptr)->data)); \
+                (da_ptr)->data[i] = (e);                                        \
+                (da_ptr)->size - 1;                                             \
+        })
+
+/* Get size */
+#define da_getsize(da) ((da).size)
+
+/* Get the index of an element given a pointer to this element */
+#define da_index(da_elem_ptr, da) (int) ((da_elem_ptr) - (da.data))
+
+/* Remove element al index I */
+#define da_remove(da_ptr, i)                                                                                                      \
+        ({                                                                                                                        \
+                if (i >= 0 && i < (da_ptr)->size) {                                                                               \
+                        --(da_ptr)->size;                                                                                         \
+                        memmove((da_ptr)->data + (i), (da_ptr)->data + (i) + 1, ((da_ptr)->size - (i)) * sizeof *(da_ptr)->data); \
+                }                                                                                                                 \
+        })
+
+/* can be used as:
+ * for_da_each(i, DA), where
+ * - i: varuable where a pointer to an element from DA is going to be stored
+ * - DA: is a valid DA */
+#define for_da_each(_i_, da) \
+        for (AUTO_TYPE _i_ = (da).data; (int) (_i_ - (da).data) < (da).size; ++_i_)
+
+
+#endif
 
 // #define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
+
+typedef DA(char *) frog_da_str;
 
 /* The result have to be freed */
 #define frog_path_join(path, file)                                 \
@@ -61,12 +215,12 @@ typedef DA(char *) frog_da_str;
                 s;                                                 \
         })
 
-#define frog_cmd_filtered_foreach(path, filter, ...)              \
-        do {                                                      \
-                frog_da_str __filter = { 0 };                     \
-                frog_filter_files(&__filter, path, filter); \
-                frog_cmd_foreach(__filter, ##__VA_ARGS__, NULL);  \
-                frog_delete_filter(&__filter);                    \
+#define frog_cmd_filtered_foreach(path, filter, ...)             \
+        do {                                                     \
+                frog_da_str __filter = { 0 };                    \
+                frog_filter_files(&__filter, path, filter);      \
+                frog_cmd_foreach(__filter, ##__VA_ARGS__, NULL); \
+                frog_delete_filter(&__filter);                   \
         } while (0)
 
 void
