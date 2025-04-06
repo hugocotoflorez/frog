@@ -21,7 +21,7 @@
  * It recompiles itself if source is newer than executable.
  */
 
-#define STD "c99"
+#define FROG_STD "c99"
 
 #ifndef _DEFAULT_SOURCE
 #define _DEFAULT_SOURCE
@@ -57,22 +57,22 @@
 
 #define UNREACHABLE(...)                                                                 \
         do {                                                                             \
-                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                             \
-                fprintf(stderr, "[Unreachable]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                fprintf(stderr, __FILE__ ":%d ", __LINE__);                             \
+                fprintf(stderr, "[Unreachable]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
                 exit(1);                                                                 \
         } while (0)
 
 #define NOIMPLEMENTED(...)                                                                      \
         do {                                                                                    \
-                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                                    \
-                fprintf(stderr, "[No yet implemented]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                fprintf(stderr, __FILE__ ":%d ", __LINE__);                                    \
+                fprintf(stderr, "[No yet implemented]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
                 exit(1);                                                                        \
         } while (0)
 
 #define OBSOLETE(...)                                                                 \
         do {                                                                          \
-                fprintf(stderr, __FILE__ ":%d: ", __LINE__);                          \
-                fprintf(stderr, "[Obsolete]" __VA_OPT__(": %s") "\n", ##__VA_ARGS__); \
+                fprintf(stderr, __FILE__ ":%d ", __LINE__);                          \
+                fprintf(stderr, "[Obsolete]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
         } while (0)
 
 #define TODO(...)
@@ -199,7 +199,7 @@
 
 /* can be used as:
  * for_da_each(i, DA), where
- * - i: varuable where a pointer to an element from DA is going to be stored
+ * - i: variable where a pointer to an element from DA is going to be stored
  * - DA: is a valid DA */
 #define for_da_each(_i_, da) \
         for (AUTO_TYPE _i_ = (da).data; (int) (_i_ - (da).data) < (da).size; ++_i_)
@@ -327,17 +327,17 @@ frog_is_newer(const char *file1, const char *file2)
         return f1s.st_atime > f2s.st_atime;
 }
 
-#define frog_rebuild_itself(argc, argv)                                                   \
-        do {                                                                              \
-                if (frog_is_newer(__FILE__, argv[0])) {                                   \
-                        char new_name[32];                                                \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);           \
-                        rename(argv[0], new_name);                                        \
-                        LOG("Rebuilding " __FILE__ "\n");                                 \
-                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=" STD, NULL); \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                 \
-                        exit(0);                                                          \
-                }                                                                         \
+#define frog_rebuild_itself(argc, argv)                                                    \
+        do {                                                                               \
+                if (frog_is_newer(__FILE__, argv[0])) {                                    \
+                        char new_name[32];                                                 \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);            \
+                        rename(argv[0], new_name);                                         \
+                        LOG("Rebuilding " __FILE__ "\n");                                  \
+                        frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=" FROG_STD, NULL); \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                  \
+                        exit(0);                                                           \
+                }                                                                          \
         } while (0)
 
 void
