@@ -1,19 +1,25 @@
 #define FROG_IMPLEMENTATION
 #include "frog.h"
 
+#define CC "gcc"
+#define FLAGS "-Wall", "-Wextra"
+#define INC "-Iinclude"
+#define OUT "hsll"
+#define OBJ_DIR "objects"
+
+
 int
 main(int argc, char *argv[])
 {
-        frog_da_str src = { 0 };
         frog_rebuild_itself(argc, argv);
 
-        frog_filter_files(&src, "./src", ".*.c");
-        frog_cmd_foreach(src, "gcc", "-c", NULL);
-        frog_delete_filter(&src);
+        frog_cmd_filtered_foreach("src", ".*.c", CC, FLAGS, INC, "-c");
+        frog_cmd_filtered_foreach("vshkh", ".*.c", CC, FLAGS, INC, "-c");
+        frog_cmd_filtered_foreach("vshcfp", ".*.c", CC, FLAGS, INC, "-c");
 
-        frog_makedir("objs");
-        frog_shell_cmd("mv *.o objs");
-        frog_shell_cmd("gcc objs/*.o -o executable");
+        frog_makedir(OBJ_DIR);
+        frog_shell_cmd( "mv *.o " OBJ_DIR);
+        frog_shell_cmd( "gcc " OBJ_DIR "/*.o -o" OUT);
 
         return 0;
 }
