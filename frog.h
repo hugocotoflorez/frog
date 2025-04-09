@@ -55,24 +55,24 @@
         } while (0)
 #endif
 
-#define UNREACHABLE(...)                                                                 \
-        do {                                                                             \
+#define UNREACHABLE(...)                                                                \
+        do {                                                                            \
                 fprintf(stderr, __FILE__ ":%d ", __LINE__);                             \
                 fprintf(stderr, "[Unreachable]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
-                exit(1);                                                                 \
+                exit(1);                                                                \
         } while (0)
 
-#define NOIMPLEMENTED(...)                                                                      \
-        do {                                                                                    \
+#define NOIMPLEMENTED(...)                                                                     \
+        do {                                                                                   \
                 fprintf(stderr, __FILE__ ":%d ", __LINE__);                                    \
                 fprintf(stderr, "[No yet implemented]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
-                exit(1);                                                                        \
+                exit(1);                                                                       \
         } while (0)
 
-#define OBSOLETE(...)                                                                 \
-        do {                                                                          \
-                fprintf(stderr, __FILE__ ":%d ", __LINE__);                          \
-                fprintf(stderr, "[Obsolete]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
+#define DEPRECATED(...)                                                                \
+        do {                                                                           \
+                fprintf(stderr, __FILE__ ":%d ", __LINE__);                            \
+                fprintf(stderr, "[Deprecated]" __VA_OPT__(" %s") "\n", ##__VA_ARGS__); \
         } while (0)
 
 #define TODO(...)
@@ -133,7 +133,7 @@
  * passed as second argument, default is 4. */
 #define da_init(da_ptr, ...)                                                               \
         ({                                                                                 \
-                OBSOLETE("da_init -> zero initialize it\n");                               \
+                DEPRECATED("da_init -> zero initialize it\n");                             \
                 (da_ptr)->capacity = 256;                                                  \
                 __VA_OPT__((da_ptr)->capacity = (__VA_ARGS__));                            \
                 (da_ptr)->size = 0;                                                        \
@@ -292,8 +292,9 @@ frog_cmd_asyncv(const char *command, va_list fargs)
 /* Execute program with variadict arguments (null terminated argument list)
  * and return the pid of the new process that is executing the command.
  * It dont handle exit status neither wait for termination. */
+#define frog_cmd_async(command, ...) __frog_cmd_async(command, ##__VA_ARGS__, NULL)
 int
-frog_cmd_async(const char *command, ...)
+__frog_cmd_async(const char *command, ...)
 {
         va_list fargs;
         va_start(fargs, command);
@@ -304,8 +305,9 @@ frog_cmd_async(const char *command, ...)
 
 /* Execute command with variadict arguments (null terminated)
  * wait for command termination and return the exit code */
+#define frog_cmd_wait(command, ...) __frog_cmd_wait(command, ##__VA_ARGS__, NULL)
 int
-frog_cmd_wait(const char *command, ...)
+__frog_cmd_wait(const char *command, ...)
 {
         int pid;
         va_list fargs;
@@ -327,21 +329,22 @@ frog_is_newer(const char *file1, const char *file2)
         return f1s.st_atime > f2s.st_atime;
 }
 
-#define frog_rebuild_itself(argc, argv)                                                    \
-        do {                                                                               \
-                if (frog_is_newer(__FILE__, argv[0])) {                                    \
-                        char new_name[32];                                                 \
-                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);            \
-                        rename(argv[0], new_name);                                         \
-                        LOG("Rebuilding " __FILE__ "\n");                                  \
+#define frog_rebuild_itself(argc, argv)                                                        \
+        do {                                                                                   \
+                if (frog_is_newer(__FILE__, argv[0])) {                                        \
+                        char new_name[32];                                                     \
+                        snprintf(new_name, sizeof new_name, OLD_NAME, argv[0]);                \
+                        rename(argv[0], new_name);                                             \
+                        LOG("Rebuilding " __FILE__ "\n");                                      \
                         frog_cmd_wait("gcc", __FILE__, "-o", argv[0], "-std=" FROG_STD, NULL); \
-                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                  \
-                        exit(0);                                                           \
-                }                                                                          \
+                        waitpid(frog_cmd_asyncl(argv[0], argv), NULL, 0);                      \
+                        exit(0);                                                               \
+                }                                                                              \
         } while (0)
 
+#define frog_cmd_foreach(command, ...) __frog_cmd_foreach(command, ##__VA_ARGS__, NULL)
 void
-frog_cmd_foreach(frog_da_str files, const char *command, ...)
+__frog_cmd_foreach(frog_da_str files, const char *command, ...)
 {
         int *pids = malloc(sizeof(int) * files.size);
         frog_da_str cmdargs = { 0 };
