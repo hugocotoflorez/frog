@@ -24,13 +24,15 @@ FROG is not a compiler nor a full build system — it's a **minimalist C-native 
 
 Simply include the `frog.h` file in your project. FROG is a single-header library with an optional implementation block.
 
+Download using `wget`
+```sh
+wget https://raw.githubusercontent.com/hugocotoflorez/frog/refs/heads/main/frog.h
+```
+
 ```c
 #define FROG_IMPLEMENTATION
 #include "frog.h"
 ```
-
-You also need [`da.h`](https://github.com/tsoding/nob.h/blob/master/da.h), a simple dynamic array utility header.
-
 
 
 ## Quickstart
@@ -38,24 +40,16 @@ You also need [`da.h`](https://github.com/tsoding/nob.h/blob/master/da.h), a sim
 Here’s a minimal example of how to use FROG to compile all `.c` files in a `src/` directory and link them into an executable:
 
 ```c
-#define FROG_IMPLEMENTATION
+
 #include "frog.h"
 
-int
-main(int argc, char *argv[])
-{
-        frog_da_str src = { 0 };
-        frog_rebuild_itself(argc, argv);
-
-        frog_filter_files(&src, "./src", ".*.c");
-        frog_cmd_foreach(src, "gcc", "-c", NULL);
-        frog_delete_filter(&src);
-
-        frog_makedir("objs");
-        frog_shell_cmd("mv *.o objs");
-        frog_shell_cmd("gcc objs/*.o -o executable");
-
-        return 0;
+int main(int argc, char *argv[]) {
+    frog_rebuild_itself(argc, argv);
+    frog_cmd_filtered_foreach("src", ".*.c", "gcc", "-Wall", "-c");
+    frog_makedir("objs");
+    frog_shell_cmd("mv *.o objs");
+    frog_shell_cmd("gcc objs/*.o -o hello");
+    return 0;
 }
 ```
 
