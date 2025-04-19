@@ -1,5 +1,5 @@
 #define FROG_IMPLEMENTATION
-#include "frog.h"
+#include "../frog.h"
 
 #define CC "gcc"
 #define FLAGS "-Wall", "-Wextra"

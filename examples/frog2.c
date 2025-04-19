@@ -1,4 +1,4 @@
-#include "frog.h"
+#include "../frog.h"
 
 int
 main (int argc, char *argv[])

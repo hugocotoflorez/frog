@@ -104,6 +104,8 @@
 #define DYNAMIC_ARRAY_H
 
 #include <stdlib.h> // alloc
+#include <string.h> // memmove
+#include <assert.h>
 
 #if defined(__cplusplus)
 #if defined(__GNUC__)
@@ -130,7 +132,6 @@
                 type *data;                                                   \
         }
 
-#include <assert.h>
 /* Initialize DA_PTR (that is a pointer to a DA). Initial size (int) can be
  * passed as second argument, default is 4. */
 #define da_init(da_ptr, ...)                                                  \
@@ -147,7 +148,6 @@
                 da_ptr;                                                       \
         })
 
-#include <assert.h>
 // add E to DA_PTR that is a pointer to a DA of the same type as E
 #define da_append(da_ptr, e)                                                  \
         ({                                                                    \
@@ -174,7 +174,6 @@
         })
 
 /* Insert element E into DA pointed by DA_PTR at index I. */
-#include <string.h> // memmove
 #define da_insert(da_ptr, e, i)                                               \
         ({                                                                    \
                 assert ((i) >= 0 && (i) <= (da_ptr)->size);                   \
@@ -213,7 +212,7 @@
 
 #endif
 
-#define FROG_IMPLEMENTATION
+// #define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
 
 typedef DA (char *) frog_da_str;
