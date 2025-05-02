@@ -40,7 +40,6 @@
 #include <unistd.h>
 
 #define OLD_NAME "%s.old"
-#define LOG_PRINT 0
 
 /*
  * ----------| LOG & Related |----------
@@ -63,14 +62,14 @@
                 __VA_OPT__ (__VA_ARGS__);                                     \
         } while (0)
 
-#define UNREACHABLE(...) REPORT ("[Unreachable]" __VA_ARGS__ "\n", exit (1));
+#define UNREACHABLE(...) REPORT ("[Unreachable] " __VA_ARGS__ "\n", exit (1));
 
 #define NOIMPLEMENTED(...)                                                    \
-        REPORT ("[No yet implemented]" __VA_ARGS__ "\n", exit (1));
+        REPORT ("[No yet implemented] " __VA_ARGS__ "\n", exit (1));
 
-#define PANIC(...) REPORT ("[Panic]" __VA_ARGS__ "\n", exit (1));
+#define PANIC(...) REPORT ("[Panic] " __VA_ARGS__ "\n", exit (1));
 
-#define DEPRECATED(...) REPORT ("[Deprecated]" __VA_ARGS__ "\n");
+#define DEPRECATED(...) REPORT ("[Deprecated] " __VA_ARGS__ "\n");
 
 #define TODO(...)
 
@@ -213,7 +212,6 @@
 
 #endif
 
-#define FROG_IMPLEMENTATION
 #ifdef FROG_IMPLEMENTATION
 
 typedef DA (char *) frog_da_str;
