@@ -27,17 +27,20 @@
 #define _DEFAULT_SOURCE
 #endif
 
-#include <dirent.h>
-
 #include <errno.h>
-#include <regex.h>
+#include <dirent.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#else
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <unistd.h>
+#include <regex.h>
+#endif
 
 #define OLD_NAME "%s.old"
 
